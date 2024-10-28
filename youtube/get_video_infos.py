@@ -83,7 +83,7 @@ def get_video_info(url):
             # 스크롤을 제한된 횟수만큼만 내리기
             scroll_count = 10
             for _ in range(scroll_count):
-                driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                 driver.implicitly_wait(10)
         except Exception as e:
             print("스크롤 다운 중 에러 발생", e)
@@ -105,5 +105,5 @@ def get_video_info(url):
     finally:
         driver.quit()
 
-video_url = 'https://www.youtube.com/watch?v=pvLlRyMtul8'
+video_url = 'https://www.youtube.com/watch?v=HuV0A_4HhSU'
 get_video_info(video_url)
