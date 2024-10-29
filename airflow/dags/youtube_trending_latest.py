@@ -200,7 +200,7 @@ with DAG (
 ) as dag:
     
     ts_nodash = "{{ ts_nodash }}"
-    execution_ts = datetime.strptime(ts_nodash, "%Y%m%dT%H%M%S")
+    execution_ts = datetime.strptime(ts_nodash, "%Y%m%dT%H%M%S") + timedelta(hours=9)
 
     trending_latest_links = get_trending_latest_links() # task_1
     trending_latest_video_infos = get_video_infos(links=trending_latest_links) # task_2
