@@ -11,10 +11,8 @@ import csv
 
 CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 DAG_NAME = 'youtube_trending_latest'
-EXECUTION_TS = None
-DIR_PATH = None
 
-# webdriver's options
+# Webdriver options
 OPTIONS = webdriver.ChromeOptions()
 OPTIONS.add_argument("--headless")
 OPTIONS.add_argument('--no-sandbox')
@@ -25,7 +23,7 @@ OPTIONS.add_argument("--disable-software-rasterizer")
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2024, 10, 28),
+    'start_date': datetime(2024, 11, 1),
     'retries': 1,
     'retry_delay': timedelta(minutes=3),
 }
@@ -33,90 +31,90 @@ default_args = {
 dag = DAG(
     f'{DAG_NAME}_dag',
     default_args=default_args,
-    description='유튜브 최신 인기 급상승 동영상 dag',
+    description='YouTube latest trending videos DAG',
     schedule_interval='@hourly',
     catchup=False
 )
 
 def get_trending_latest_links(**context):
     try:
-        global EXECUTION_TS
-        EXECUTION_TS = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S') + timedelta(hours=10)
-        make_dir()
+        execution_ts = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S') + timedelta(hours=10)
+        dir_path = make_dir(execution_ts)
 
         driver = webdriver.Chrome(service=Service(), options=OPTIONS)
         driver.get("https://www.youtube.com/feed/trending")
         driver.implicitly_wait(10)
 
         latest_videos = driver.find_elements(By.XPATH, '//*[@id="video-title"]')
-        latest_links = [video.get_attribute('href') for video in latest_videos if video.get_attribute('href')]        
-        logging.info(f"유튜브 최신 인기 급상승 동영상 링크 추출 완료 (현재 시각: {EXECUTION_TS})")
-        
+        latest_links = [video.get_attribute('href') for video in latest_videos if video.get_attribute('href')]
+        logging.info(f"YouTube latest trending video links extracted (current time: {execution_ts})")
+
         trending_latest_columns = ['rank', 'link', 'execution_ts']
-        trending_latest_rows = [[i + 1, latest_links[i], EXECUTION_TS] for i in range(len(latest_links))]
-        save_to_csv(columns=trending_latest_columns, rows=trending_latest_rows, file_name='trending_latest_links')
-        
+        trending_latest_rows = [
+            [i + 1, latest_links[i], execution_ts] for i in range(len(latest_links))
+        ]
+        save_to_csv(columns=trending_latest_columns, rows=trending_latest_rows, dir_path=dir_path, file_name=f'trending_latest_links_{execution_ts}')
+
         return latest_links
-    
+
     except Exception as e:
-        logging.error(f"유튜브 최신 인기 급상승 동영상 페이지 크롤링 중 에러 발생: {e}")
+        logging.error(f"Error during YouTube trending videos page crawling: {e}")
     finally:
         driver.quit()
 
 def get_video_infos(**context):
     try:
+        execution_ts = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S') + timedelta(hours=10)
+        dir_path = make_dir(execution_ts)
+
         links = context["task_instance"].xcom_pull(key="return_value", task_ids="get_trending_latest_links")
         infos = []
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = []
-            for link in links:
-                futures.append(executor.submit(get_video_info, link))
+            futures = [executor.submit(get_video_info, link) for link in links]
 
             for future in as_completed(futures):
                 result = future.result()
                 if result:
                     infos.append(result)
-        
-        trending_latest_video_columns = ["link", "title", "views_count", "uploaded_date", "thumbsup_count", "thumbnail_img", "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img", "comments", 'execution_ts']
-        trending_latest_video_rows = [infos[i] + [EXECUTION_TS] for i in range(len(infos))]
-        save_to_csv(columns=trending_latest_video_columns, rows=trending_latest_video_rows, file_name='trending_latest_video_infos')
-    
-    except Exception as e:
-        logging.error(f"get_video_infos 테스크 실행 중 에러 발생: {e}")
-        exit()
 
-def make_dir():
-    year = EXECUTION_TS.year
-    month = EXECUTION_TS.month
-    day = EXECUTION_TS.day
-    hour = EXECUTION_TS.hour
-    global DIR_PATH
-    DIR_PATH = os.path.join(CUR_PATH, f'output/transaction_files/{DAG_NAME}/{year}/{month}/{day}/{hour}')
+        trending_latest_video_columns = [
+            "link", "title", "views_count", "uploaded_date", "thumbsup_count", "thumbnail_img", 
+            "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img", 
+            "comment_1", "comment_2", "comment_3", "comment_4", "comment_5", "execution_ts"
+        ]
+        trending_latest_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
+        save_to_csv(columns=trending_latest_video_columns, rows=trending_latest_video_rows, dir_path=dir_path, file_name=f'trending_latest_video_infos_{execution_ts}')
+
+    except Exception as e:
+        logging.error(f"Error during get_video_infos task execution: {e}")
+
+def make_dir(execution_ts):
+    year, month, day, hour = execution_ts.year, execution_ts.month, execution_ts.day, execution_ts.hour
+    dir_path = os.path.join(CUR_PATH, f'output/transaction_files/{DAG_NAME}/{year}/{month}/{day}/{hour}')
     try:
-        os.makedirs(DIR_PATH)
-        logging.info(f'{DIR_PATH}가 생성되었습니다.')
-
+        os.makedirs(dir_path, exist_ok=True)
+        logging.info(f'{dir_path} has been created.')
     except Exception as e:
-        logging.error(f'{DIR_PATH} 생성 중 에러 발생: {e}')
+        logging.error(f"Error creating {dir_path}: {e}")
+    return dir_path
 
-def save_to_csv(columns, rows, file_name):
-    csv_path = f'{DIR_PATH}/{file_name}_{EXECUTION_TS}.csv'
+def save_to_csv(columns, rows, dir_path, file_name):
+    csv_path = f'{dir_path}/{file_name}.csv'
     try:
         with open(csv_path, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(columns)
             writer.writerows(rows)
-            logging.info(f'{csv_path}가 저장되었습니다.')
+            logging.info(f'{csv_path} has been saved.')
 
     except Exception as e:
-        logging.error(f"{csv_path} 저장 중 에러 발생: {e}")
+        logging.error(f"Error saving {csv_path}: {e}")
 
 def get_video_info(link):
-    # 영상 정보 추출: [링크, 제목, 조회수, 업로드일, 좋아요 수, 썸네일 이미지, 영상 텍스트, 채널 링크, 채널명, 구독자 수, 채널 이미지, 댓글]
     try:
-        logging.info(f"{link} 동영상 페이지 스크래핑 시작")
+        logging.info(f"Starting scraping for video page {link}")
         info = [link]
-        
+
         driver = webdriver.Chrome(service=Service(), options=OPTIONS)
         driver.get(link)
         driver.implicitly_wait(10)
@@ -194,20 +192,19 @@ def get_video_info(link):
         except Exception as e:
             logging.error(f"스크롤링 중 에러 발생: {e}")
         try:
-            comments = []
             comment_elements = driver.find_elements(By.CSS_SELECTOR, "#content-text")
             max_count = 5 # 최대 상위 5개 추출 (좋아요 수 기준)
             for comment_element in comment_elements[:max_count]:
-                comments.append(comment_element.text)
-            info.append(comments if comments else '')
+                comment = comment_element.text
+                info.append(comment if comment else '')
         except Exception as e:
             logging.error(f"댓글 추출 중 에러 발생: {e}")
 
-        logging.info(f"{link} 동영상 페이지 스크래핑 완료")
+        logging.info(f"Scraping for video page {link} completed.")
         return info
 
     except Exception as e:
-        logging.error(f"{link} 동영상 페이지 스크래핑 중 에러 발생: {e}")
+        logging.error(f"Error during video page scraping for {link}: {e}")
     finally:
         driver.quit()
 
