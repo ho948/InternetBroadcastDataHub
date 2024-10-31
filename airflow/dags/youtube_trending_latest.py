@@ -19,11 +19,12 @@ OPTIONS.add_argument('--no-sandbox')
 OPTIONS.add_argument('--disable-gpu')
 OPTIONS.add_argument('--disable-dev-shm-usage')
 OPTIONS.add_argument("--disable-software-rasterizer")
+OPTIONS.add_argument("--lang=ko")
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2024, 11, 1),
+    'start_date': datetime(2024, 10, 30),
     'retries': 1,
     'retry_delay': timedelta(minutes=3),
 }
@@ -32,7 +33,7 @@ dag = DAG(
     f'{DAG_NAME}_dag',
     default_args=default_args,
     description='YouTube latest trending videos DAG',
-    schedule_interval='@hourly',
+    schedule_interval='0 * * * *', # 매 정시마다 실행
     catchup=False
 )
 
@@ -47,6 +48,8 @@ def get_trending_latest_links(**context):
 
         latest_videos = driver.find_elements(By.XPATH, '//*[@id="video-title"]')
         latest_links = [video.get_attribute('href') for video in latest_videos if video.get_attribute('href')]
+        # shorts_latest_links = [link for link in latest_links if "shorts" in link]
+        latest_links = [link for link in latest_links if "shorts" not in link] # 쇼츠에 해당하지 않는 것만 추출.
         logging.info(f"YouTube latest trending video links extracted (current time: {execution_ts})")
 
         trending_latest_columns = ['rank', 'link', 'execution_ts']
@@ -79,8 +82,8 @@ def get_video_infos(**context):
 
         trending_latest_video_columns = [
             "link", "title", "views_count", "uploaded_date", "thumbsup_count", "thumbnail_img", 
-            "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img", 
-            "comment_1", "comment_2", "comment_3", "comment_4", "comment_5", "execution_ts"
+            "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img",
+            "execution_ts"
         ]
         trending_latest_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
         save_to_csv(columns=trending_latest_video_columns, rows=trending_latest_video_rows, dir_path=dir_path, file_name=f'trending_latest_video_infos_{execution_ts}')
@@ -184,21 +187,21 @@ def get_video_info(link):
         except Exception as e:
             logging.error(f"채널 이미지 추출 중 에러 발생: {e}")
 
-        try:
-            scroll_count = 10
-            for _ in range(scroll_count):
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                driver.implicitly_wait(10)
-        except Exception as e:
-            logging.error(f"스크롤링 중 에러 발생: {e}")
-        try:
-            comment_elements = driver.find_elements(By.CSS_SELECTOR, "#content-text")
-            max_count = 5 # 최대 상위 5개 추출 (좋아요 수 기준)
-            for comment_element in comment_elements[:max_count]:
-                comment = comment_element.text
-                info.append(comment if comment else '')
-        except Exception as e:
-            logging.error(f"댓글 추출 중 에러 발생: {e}")
+        # try:
+        #     scroll_count = 10
+        #     for _ in range(scroll_count):
+        #         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        #         driver.implicitly_wait(10)
+        # except Exception as e:
+        #     logging.error(f"스크롤링 중 에러 발생: {e}")
+        # try:
+        #     comment_elements = driver.find_elements(By.CSS_SELECTOR, "yt-formatted-string#content-text")
+        #     max_count = 5 # 최대 상위 5개 추출 (좋아요 수 기준)
+        #     for comment_element in comment_elements[:max_count]:
+        #         comment = comment_element.text
+        #         info.append(comment if comment else '')
+        # except Exception as e:
+        #     logging.error(f"댓글 추출 중 에러 발생: {e}")
 
         logging.info(f"Scraping for video page {link} completed.")
         return info
