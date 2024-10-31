@@ -49,7 +49,7 @@ def get_trending_game_links(**context):
         driver.implicitly_wait(10)
         # "게임" 카테고리 탭이 로드될 때까지 기다린 후 클릭
         game_tab = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//yt-tab-shape[@tab-title='게임']"))
+            EC.element_to_be_clickable((By.XPATH, "//yt-tab-shape[@tab-title='Gaming']"))
             )
         game_tab.click()
         driver.implicitly_wait(10)
