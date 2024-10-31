@@ -24,7 +24,7 @@ OPTIONS.add_argument("--lang=ko")
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2024, 10, 30),
+    'start_date': datetime(2024, 11, 1),
     'retries': 1,
     'retry_delay': timedelta(minutes=3),
 }
