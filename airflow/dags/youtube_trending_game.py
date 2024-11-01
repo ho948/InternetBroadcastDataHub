@@ -60,17 +60,20 @@ def get_trending_game_links(**context):
 
         game_videos = driver.find_elements(By.XPATH, '//*[@id="video-title"]')
         game_links = [video.get_attribute('href') for video in game_videos if video.get_attribute('href')]
-        # shorts_game_links = [link for link in game_links if "shorts" in link]
-        game_links = [link for link in game_links if "shorts" not in link] # 쇼츠에 해당하지 않는 것만 추출.
-        logging.info(f"YouTube game trending video links extracted (current time: {execution_ts})")
+        if game_links is not None:
+            # shorts_game_links = [link for link in game_links if "shorts" in link]
+            game_links = [link for link in game_links if "shorts" not in link] # 쇼츠에 해당하지 않는 것만 추출.
+            logging.info(f"YouTube game trending video links extracted (current time: {execution_ts})")
 
-        trending_game_columns = ['rank', 'link', 'execution_ts']
-        trending_game_rows = [
-            [i + 1, game_links[i], execution_ts] for i in range(len(game_links))
-        ]
-        save_to_csv(columns=trending_game_columns, rows=trending_game_rows, dir_path=dir_path, file_name=f'trending_game_links_{execution_ts}')
-
-        return game_links
+            trending_game_columns = ['rank', 'link', 'execution_ts']
+            trending_game_rows = [
+                [i + 1, game_links[i], execution_ts] for i in range(len(game_links))
+            ]
+            save_to_csv(columns=trending_game_columns, rows=trending_game_rows, dir_path=dir_path, file_name=f'trending_game_links_{execution_ts}')
+            return game_links
+        else:
+            logging.error("There are no game trending video links")
+            exit()
 
     except Exception as e:
         logging.error(f"Error during YouTube trending videos page crawling: {e}")
@@ -98,8 +101,12 @@ def get_video_infos(**context):
             "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img",
             "execution_ts"
         ]
-        trending_game_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
-        save_to_csv(columns=trending_game_video_columns, rows=trending_game_video_rows, dir_path=dir_path, file_name=f'trending_game_video_infos_{execution_ts}')
+        if infos is not None:
+            trending_game_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
+            save_to_csv(columns=trending_game_video_columns, rows=trending_game_video_rows, dir_path=dir_path, file_name=f'trending_game_video_infos_{execution_ts}')
+        else:
+            logging.error("There are no video infos")
+            exit()
 
     except Exception as e:
         logging.error(f"Error during get_video_infos task execution: {e}")

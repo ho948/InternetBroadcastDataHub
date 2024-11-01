@@ -48,17 +48,20 @@ def get_trending_latest_links(**context):
 
         latest_videos = driver.find_elements(By.XPATH, '//*[@id="video-title"]')
         latest_links = [video.get_attribute('href') for video in latest_videos if video.get_attribute('href')]
-        # shorts_latest_links = [link for link in latest_links if "shorts" in link]
-        latest_links = [link for link in latest_links if "shorts" not in link] # 쇼츠에 해당하지 않는 것만 추출.
-        logging.info(f"YouTube latest trending video links extracted (current time: {execution_ts})")
+        if latest_links is not None:
+            # shorts_latest_links = [link for link in latest_links if "shorts" in link]
+            latest_links = [link for link in latest_links if "shorts" not in link] # 쇼츠에 해당하지 않는 것만 추출.
+            logging.info(f"YouTube latest trending video links extracted (current time: {execution_ts})")
 
-        trending_latest_columns = ['rank', 'link', 'execution_ts']
-        trending_latest_rows = [
-            [i + 1, latest_links[i], execution_ts] for i in range(len(latest_links))
-        ]
-        save_to_csv(columns=trending_latest_columns, rows=trending_latest_rows, dir_path=dir_path, file_name=f'trending_latest_links_{execution_ts}')
-
-        return latest_links
+            trending_latest_columns = ['rank', 'link', 'execution_ts']
+            trending_latest_rows = [
+                [i + 1, latest_links[i], execution_ts] for i in range(len(latest_links))
+            ]
+            save_to_csv(columns=trending_latest_columns, rows=trending_latest_rows, dir_path=dir_path, file_name=f'trending_latest_links_{execution_ts}')
+            return latest_links
+        else:
+            logging.error("There are no latest trending video links")
+            exit()
 
     except Exception as e:
         logging.error(f"Error during YouTube trending videos page crawling: {e}")
@@ -86,8 +89,12 @@ def get_video_infos(**context):
             "video_text", "channel_link", "channel_name", "subscribers_count", "channel_img",
             "execution_ts"
         ]
-        trending_latest_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
-        save_to_csv(columns=trending_latest_video_columns, rows=trending_latest_video_rows, dir_path=dir_path, file_name=f'trending_latest_video_infos_{execution_ts}')
+        if infos is not None:
+            trending_latest_video_rows = [infos[i] + [execution_ts] for i in range(len(infos))]
+            save_to_csv(columns=trending_latest_video_columns, rows=trending_latest_video_rows, dir_path=dir_path, file_name=f'trending_latest_video_infos_{execution_ts}')
+        else:
+            logging.error("There are no video infos")
+            exit()
 
     except Exception as e:
         logging.error(f"Error during get_video_infos task execution: {e}")
