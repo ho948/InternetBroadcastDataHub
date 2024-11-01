@@ -74,6 +74,7 @@ def get_trending_game_links(**context):
 
     except Exception as e:
         logging.error(f"Error during YouTube trending videos page crawling: {e}")
+        exit()
     finally:
         driver.quit()
 
@@ -102,6 +103,7 @@ def get_video_infos(**context):
 
     except Exception as e:
         logging.error(f"Error during get_video_infos task execution: {e}")
+        exit()
 
 def make_dir(execution_ts):
     year, month, day, hour = execution_ts.year, execution_ts.month, execution_ts.day, execution_ts.hour
@@ -124,6 +126,7 @@ def save_to_csv(columns, rows, dir_path, file_name):
 
     except Exception as e:
         logging.error(f"Error saving {csv_path}: {e}")
+        exit()
 
 def get_video_info(link):
     try:
@@ -220,6 +223,7 @@ def get_video_info(link):
 
     except Exception as e:
         logging.error(f"Error during video page scraping for {link}: {e}")
+        exit()
     finally:
         driver.quit()
 
