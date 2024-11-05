@@ -1,24 +1,18 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import os
 import logging
 import csv
+import requests
 
 CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 DAG_NAME = 'soop_popular_live'
 
-# Webdriver options
-OPTIONS = webdriver.ChromeOptions()
-OPTIONS.add_argument("--headless")
-OPTIONS.add_argument('--no-sandbox')
-OPTIONS.add_argument('--disable-gpu')
-OPTIONS.add_argument('--disable-dev-shm-usage')
-OPTIONS.add_argument("--disable-software-rasterizer")
-OPTIONS.add_argument("--lang=ko")
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36",
+    "Accept": "application/json"
+}
 
 default_args = {
     'owner': 'airflow',
@@ -38,95 +32,51 @@ dag = DAG(
 
 def get_popular_lives(**context):
     try:
-        execution_ts = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S') + timedelta(hours=10)
-        driver = webdriver.Chrome(service=Service(), options=OPTIONS)
-        driver.get("https://www.sooplive.co.kr/live/all")
-        driver.implicitly_wait(10)
-
-        live_infos = []
-        for i in range(1, 21):
-            live_info = [execution_ts] + get_live_info(driver=driver, idx=i)
-            live_infos.append(live_info)
-
-        logging.info("popular_lives 크롤링 완료")
-        return live_infos
-
-    except Exception as e:
-        logging.error(f"popular_lives 크롤링 중 에러 발생: {e}")
+        url = "https://live.sooplive.co.kr/api/myplus/preferbjOnLnbController.php"
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()
+        json_data = response.json()
+        logging.info("인기 라이브 추출 완료")
+        return json_data
+    except requests.exceptions.RequestException as e:
+        logging.error(f"lives API 호출 중 에러 발생: {e}")
         raise
-
-    finally:
-        driver.quit()
 
 def load_popular_lives(**context):
     try:
-        live_infos = context["task_instance"].xcom_pull(key="return_value", task_ids="get_popular_lives")
-        columns = ['execution_ts', 'live_id', 'channel_id', 'channel_name', 'live_title', 'viewers_count', 'category', 'open_ts']
-
+        json_data = context["task_instance"].xcom_pull(key="return_value", task_ids="get_popular_lives")
         execution_ts = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S') + timedelta(hours=10)
+        columns = ['execution_ts', 'live_id', 'live_title', 'viewers_count', 'channel_id', 'channel_name', 'category', 'is_adult']
+        rows = []
+
+        for data in json_data['DATA']['streamer_list']:
+            live_info = [execution_ts] + get_live_info(live_data=data)
+            if len(live_info) != len(columns):
+                logging.error(f"라이브 데이터 크기가 올바르지 않습니다.\n{live_info}")
+                raise ValueError("라이브 데이터 크기 오류")
+            rows.append(live_info)
+
         dir_path = make_dir(execution_ts)
-        save_to_csv(columns=columns, rows=live_infos, dir_path=dir_path, file_name=f'soop_popular_lives_{execution_ts}')
+        save_to_csv(columns=columns, rows=rows, dir_path=dir_path, file_name=f'soop_popular_lives_{execution_ts}')
 
     except Exception as e:
-        logging.error(f"load_popular_lives 중 에러 발생: {e}")
+        logging.error(f"라이브 데이터 로드 중 에러 발생: {e}")
         raise
 
-def get_live_info(driver=None, idx=None):
-    if driver is None:
-        logging.error("드라이버가 존재하지 않습니다.")
-        raise ValueError("Driver not available")
-
-    info = []
-    default_xpath = f"/html/body/div[1]/main/div[2]/div[3]/ul/li[{idx}]"
-
+def get_live_info(live_data):
     try:
-        live_link_element = driver.find_element(By.XPATH, f"{default_xpath}/div[1]/a")
-        live_link = live_link_element.get_attribute("href")
-        parts = live_link.split('/')
-        live_id = parts[-1]
-        channel_id = parts[-2]
-        info.extend([live_id, channel_id])
-    except Exception as e:
-        logging.error(f"live_link 추출 중 에러 발생: {e}")
-        raise
+        live_id = live_data['broad_no']
+        live_title = live_data['broad_title']
+        viewers_count = live_data['view_cnt']
+        channel_id = live_data['user_id']
+        channel_name = live_data['user_nick']
+        category = live_data['cate_name']
+        is_adult = live_data['grade']
 
-    try:
-        channel_name_element = driver.find_element(By.XPATH, f"{default_xpath}/div[2]/div/div[1]/a/span")
-        info.append(channel_name_element.text)
+        return [live_id, live_title, viewers_count, channel_id, channel_name, category, is_adult]
     except Exception as e:
-        logging.error(f"channel_name 추출 중 에러 발생: {e}")
+        logging.error(f"{live_data}의\n 라이브 데이터 추출 중 에러 발생: {e}")
         raise
-
-    try:
-        live_title_element = driver.find_element(By.XPATH, f"{default_xpath}/div[2]/div/h3/a")
-        info.append(live_title_element.get_attribute("title"))
-    except Exception as e:
-        logging.error(f"live_title 추출 중 에러 발생: {e}")
-        raise
-
-    try:
-        viewers_count_element = driver.find_element(By.XPATH, f"{default_xpath}/div[1]/span[2]/em")
-        info.append(viewers_count_element.text)
-    except Exception as e:
-        logging.error(f"viewers_count 추출 중 에러 발생: {e}")
-        raise
-
-    try:
-        category_element = driver.find_element(By.XPATH, f"{default_xpath}/div[2]/div/div[3]/a[1]")
-        info.append(category_element.text)
-    except Exception as e:
-        logging.error(f"category 추출 중 에러 발생: {e}")
-        raise
-
-    try:
-        open_ts_element = driver.find_element(By.XPATH, f"{default_xpath}/div[1]/span[3]")
-        info.append(open_ts_element.text)
-    except Exception as e:
-        logging.error(f"open_ts 추출 중 에러 발생: {e}")
-        raise
-
-    logging.info(f"{idx}번 째 라이브 데이터 스크래핑 완료")
-    return info
 
 def make_dir(execution_ts):
     year, month, day, hour = execution_ts.year, execution_ts.month, execution_ts.day, execution_ts.hour
@@ -149,7 +99,7 @@ def save_to_csv(columns, rows, dir_path, file_name):
 
     except Exception as e:
         logging.error(f"Error saving {csv_path}: {e}")
-        exit()
+        raise
 
 get_popular_lives_task = PythonOperator(
     task_id='get_popular_lives',
