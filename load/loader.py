@@ -180,7 +180,7 @@ class Loader:
 
     def load_youtube_trending_game_videos(self):
         # youtube_trending_game_videos_cols = [
-        #     "link",	"title", "views_count",
+        #     "link", "title", "views_count",
         #     "uploaded_at", "thumbsup_count", "thumbnail_img",
         #     "video_text", "channel_link", "channel_name",
         #     "subscribers_count", "channel_img", "execution_ts"
@@ -227,6 +227,56 @@ class Loader:
         table_name = 'youtube_trending_game_videos'
         self.load_data_to_db(cols=youtube_trending_game_videos_cols, rows=youtube_trending_game_videos_rows, table_name=table_name)
 
+    def load_youtube_trending_latest_videos(self):
+        # youtube_trending_latest_videos_cols = [
+        #     "link", "title", "views_count",
+        #     "uploaded_at", "thumbsup_count", "thumbnail_img",
+        #     "video_text", "channel_link", "channel_name",
+        #     "subscribers_count", "channel_img", "execution_ts"
+        # ]
+        youtube_trending_latest_videos_cols = [
+            "link",	"title", "views_count",
+            "uploaded_at", "thumbnail_img",
+            "video_text", "channel_link", "channel_name",
+            "subscribers_count", "channel_img", "execution_ts"
+        ]
+        youtube_trending_latest_videos_rows = []
+
+        start_date = datetime(2024, 11, 6)
+        end_date = datetime(2024, 12, 6)
+        dir_name = 'youtube_trending_latest'
+        file_name = 'trending_latest_video_infos'
+        all_rows = self.get_csv_data(start_date=start_date, end_date=end_date, dir_name=dir_name, file_name=file_name)
+        
+        for row in all_rows:
+            link = row[0]
+            title = row[1]
+            views_count = row[2]
+            uploaded_at = row[3]
+            # thumbsup_count = row[4]
+            thumbnail_img = row[5]
+            video_text = row[6]
+            channel_link = row[7]
+            channel_name = row[8]
+            subscribers_count = row[9]
+            channel_img = row[10]
+            execution_ts = row[11]
+
+            # 크롤링이 제대로 안 된 데이터 제외
+            if not pd.isna(execution_ts):
+                # 데이터 변환
+                views_count = self.parse_number(value=views_count)
+                uploaded_at = self.parse_date(date_str=uploaded_at, execution_ts=execution_ts)
+                # thumbsup_count = self.parse_number(value=thumbsup_count)
+                subscribers_count = self.parse_number(value=subscribers_count)
+
+                # youtube_trending_game_videos_rows.append((link, title, views_count, uploaded_at, thumbsup_count, thumbnail_img, video_text, channel_link, channel_name, subscribers_count, channel_img, execution_ts))
+                youtube_trending_latest_videos_rows.append((link, title, views_count, uploaded_at, thumbnail_img, video_text, channel_link, channel_name, subscribers_count, channel_img, execution_ts))
+        
+        table_name = 'youtube_trending_latest_videos'
+        self.load_data_to_db(cols=youtube_trending_latest_videos_cols, rows=youtube_trending_latest_videos_rows, table_name=table_name)
+
+
     def load_csv_files_to_db(self):
         # self.load_chzzk_popular_lives()
         # print("'load_chzzk_popular_lives' 완료")
@@ -237,18 +287,8 @@ class Loader:
         # self.load_soop_popular_lives()
         # print("'load_soop_popular_lives' 완료")
 
-        self.load_youtube_trending_game_videos()
-        print("'load_youtube_trending_game_videos' 완료")
+        # self.load_youtube_trending_game_videos()
+        # print("'load_youtube_trending_game_videos' 완료")
 
-        youtube_trending_channels_cols = [
-            "channel_link", "execution_ts", "channel_name", 
-            "subscribers_count"
-        ]
-        youtube_trending_channels_rows = []
-
-        youtube_game_video_latest_cols = [
-            "link", "execution_ts", "rank", 
-            "title", "views_count", "uploaded_at", 
-            "thumbsup_count", "video_text", "channel_link"
-        ]
-        youtube_game_video_latest_rows = []
+        self.load_youtube_trending_latest_videos()
+        print("'load_youtube_trending_latest_videos' 완료")
