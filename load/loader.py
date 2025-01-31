@@ -300,6 +300,30 @@ class Loader:
         table_name = 'youtube_trending_game_ranks'
         self.load_data_to_db(cols=youtube_trending_game_ranks_cols, rows=youtube_trending_game_ranks_rows, table_name=table_name)
 
+    def load_youtube_trending_latest_ranks(self):
+        youtube_trending_latest_ranks_cols = [
+            "rk", "link", "execution_ts"
+        ]
+        youtube_trending_latest_ranks_rows = []
+
+        start_date = datetime(2024, 11, 6)
+        end_date = datetime(2024, 12, 6)
+        dir_name = 'youtube_trending_latest'
+        file_name = 'trending_latest_links'
+        all_rows = self.get_csv_data(start_date=start_date, end_date=end_date, dir_name=dir_name, file_name=file_name)
+        
+        for row in all_rows:
+            rk = row[0]
+            link = row[1]
+            execution_ts = row[2]
+
+            # 크롤링이 제대로 안 된 데이터 제외
+            if not pd.isna(execution_ts):
+                youtube_trending_latest_ranks_rows.append((rk, link, execution_ts))
+        
+        table_name = 'youtube_trending_latest_ranks'
+        self.load_data_to_db(cols=youtube_trending_latest_ranks_cols, rows=youtube_trending_latest_ranks_rows, table_name=table_name)
+
     def load_csv_files_to_db(self):
         # self.load_chzzk_popular_lives()
         # print("'load_chzzk_popular_lives' 완료")
@@ -316,5 +340,8 @@ class Loader:
         # self.load_youtube_trending_latest_videos()
         # print("'load_youtube_trending_latest_videos' 완료")
 
-        self.load_youtube_trending_game_ranks()
-        print("'load_youtube_trending_game_ranks' 완료")
+        # self.load_youtube_trending_game_ranks()
+        # print("'load_youtube_trending_game_ranks' 완료")
+
+        self.load_youtube_trending_latest_ranks()
+        print("'load_youtube_trending_latest_ranks' 완료")
