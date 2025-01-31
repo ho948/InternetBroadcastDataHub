@@ -325,23 +325,23 @@ class Loader:
         self.load_data_to_db(cols=youtube_trending_latest_ranks_cols, rows=youtube_trending_latest_ranks_rows, table_name=table_name)
 
     def load_csv_files_to_db(self):
-        # self.load_chzzk_popular_lives()
-        # print("'load_chzzk_popular_lives' 완료")
+        self.load_chzzk_popular_lives()
+        print("'load_chzzk_popular_lives' 완료")
 
-        # self.load_chzzk_popular_channels()
-        # print("'load_chzzk_popular_channels' 완료")
+        self.load_chzzk_popular_channels()
+        print("'load_chzzk_popular_channels' 완료")
 
-        # self.load_soop_popular_lives()
-        # print("'load_soop_popular_lives' 완료")
+        self.load_soop_popular_lives()
+        print("'load_soop_popular_lives' 완료")
 
-        # self.load_youtube_trending_game_videos()
-        # print("'load_youtube_trending_game_videos' 완료")
+        self.load_youtube_trending_game_videos()
+        print("'load_youtube_trending_game_videos' 완료")
 
-        # self.load_youtube_trending_latest_videos()
-        # print("'load_youtube_trending_latest_videos' 완료")
+        self.load_youtube_trending_latest_videos()
+        print("'load_youtube_trending_latest_videos' 완료")
 
-        # self.load_youtube_trending_game_ranks()
-        # print("'load_youtube_trending_game_ranks' 완료")
+        self.load_youtube_trending_game_ranks()
+        print("'load_youtube_trending_game_ranks' 완료")
 
         self.load_youtube_trending_latest_ranks()
         print("'load_youtube_trending_latest_ranks' 완료")
