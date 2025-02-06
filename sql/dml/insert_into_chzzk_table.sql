@@ -142,7 +142,7 @@ SELECT
     followers_count
 FROM raw.chzzk_popular_channels;
 
--- chzzk_channel_viewers_count(채널별 각 라이브 방송의 시청자 수) 데이터 삽입
+-- chzzk_channel_viewers_count(치지직 채널별 각 라이브 방송의 시청자 수) 데이터 삽입
 INSERT INTO chzzk.chzzk_channel_viewers_count (channel_id, live_id, channel_name, open_ts, max_viewers_count, avg_viewers_count)
 SELECT 
     l.channel_id,
@@ -156,7 +156,7 @@ JOIN raw.chzzk_popular_channels c
     ON l.channel_id = c.channel_id
 GROUP BY l.channel_id, l.live_id, c.channel_name, l.open_ts;
 
--- chzzk_category_hourly_viewers_count(카테고리별 각 시간대의 시청자 수) 데이터 삽입
+-- chzzk_category_hourly_viewers_count(치지직 카테고리별 각 시간대의 시청자 수) 데이터 삽입
 INSERT INTO chzzk.chzzk_category_hourly_viewers_count (category_id, ts, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
     l.category_id,
@@ -167,7 +167,7 @@ SELECT
 FROM raw.chzzk_popular_lives l
 GROUP BY l.category_id, DATE_TRUNC('hour', l.execution_ts);
 
--- chzzk_category_daily_viewers_count(카테고리별 각 일자의 시청자 수) 데이터 삽입
+-- chzzk_category_daily_viewers_count(치지직 카테고리별 각 일자의 시청자 수) 데이터 삽입
 INSERT INTO chzzk.chzzk_category_daily_viewers_count (category_id, date, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
     l.category_id,
