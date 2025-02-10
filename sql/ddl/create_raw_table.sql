@@ -1,4 +1,4 @@
--- 모든 테이블 삭제
+-- 테이블 삭제
 DROP TABLE IF EXISTS raw.chzzk_popular_lives;
 DROP TABLE IF EXISTS raw.chzzk_popular_channels;
 DROP TABLE IF EXISTS raw.soop_popular_lives;
@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS raw.youtube_trending_latest_videos;
 DROP TABLE IF EXISTS raw.youtube_trending_game_ranks;
 DROP TABLE IF EXISTS raw.youtube_trending_latest_ranks;
 
--- chzzk_popular_lives 테이블 생성
+-- 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.chzzk_popular_lives (
     id SERIAL,
     execution_ts TIMESTAMP NOT NULL,
@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS raw.chzzk_popular_lives (
     PRIMARY KEY (id, live_id, execution_ts)
 );
 
--- chzzk_popular_channels 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.chzzk_popular_channels (
     id SERIAL,
     execution_ts TIMESTAMP NOT NULL,
@@ -36,7 +35,6 @@ CREATE TABLE IF NOT EXISTS raw.chzzk_popular_channels (
     PRIMARY KEY (id, channel_id, execution_ts)
 );
 
--- soop_popular_lives 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.soop_popular_lives (
     id SERIAL,
     execution_ts TIMESTAMP NOT NULL,
@@ -50,7 +48,6 @@ CREATE TABLE IF NOT EXISTS raw.soop_popular_lives (
     PRIMARY KEY (id, live_id, execution_ts)
 );
 
--- youtube_trending_game_videos 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.youtube_trending_game_videos (
     id SERIAL,
     link VARCHAR(255) NOT NULL,
@@ -68,7 +65,6 @@ CREATE TABLE IF NOT EXISTS raw.youtube_trending_game_videos (
     PRIMARY KEY (id, link, execution_ts)
 );
 
--- youtube_trending_latest_videos 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.youtube_trending_latest_videos (
     id SERIAL,
     link VARCHAR(255) NOT NULL,
@@ -86,7 +82,6 @@ CREATE TABLE IF NOT EXISTS raw.youtube_trending_latest_videos (
     PRIMARY KEY (id, link, execution_ts)
 );
 
--- youtube_trending_game_ranks 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.youtube_trending_game_ranks (
     id SERIAL,
     rk INT,
@@ -95,7 +90,6 @@ CREATE TABLE IF NOT EXISTS raw.youtube_trending_game_ranks (
     PRIMARY KEY (id, link, execution_ts)
 );
 
--- youtube_trending_latest_ranks 테이블 생성
 CREATE TABLE IF NOT EXISTS raw.youtube_trending_latest_ranks (
     id SERIAL,
     rk INT,
