@@ -79,6 +79,7 @@ SELECT
     MIN(views_count) AS min_views_count,
     CAST(AVG(views_count) AS INT) AS avg_views_count
 FROM youtube.youtube_trending_latest_video_with_rank
+WHERE execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_weekly_top_10_videos_views_count (weekday, max_views_count, min_views_count, avg_views_count)
@@ -88,7 +89,7 @@ SELECT
     MIN(views_count) AS min_views_count,
     CAST(AVG(views_count) AS INT) AS avg_views_count
 FROM youtube.youtube_trending_latest_video_with_rank
-WHERE rank <= 10
+WHERE rank <= 10 AND execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_weekly_top_1_videos_views_count (weekday, max_views_count, min_views_count, avg_views_count)
@@ -98,7 +99,7 @@ SELECT
     MIN(views_count) AS min_views_count,
     CAST(AVG(views_count) AS INT) AS avg_views_count
 FROM youtube.youtube_trending_latest_video_with_rank
-WHERE rank = 1
+WHERE rank = 1 AND execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_hourly_all_channels_subscribers_count (ts, max_subscribers_count, min_subscribers_count, avg_subscribers_count)
@@ -163,6 +164,7 @@ SELECT
     MIN(subscribers_count) AS min_subscribers_count,
     ROUND(AVG(subscribers_count)) AS avg_subscribers_count
 FROM youtube.youtube_trending_latest_video_with_rank
+WHERE execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_weekly_top_10_channels_subscribers_count (weekday, max_subscribers_count, min_subscribers_count, avg_subscribers_count)
@@ -172,7 +174,7 @@ SELECT
     MIN(subscribers_count) AS min_subscribers_count,
     ROUND(AVG(subscribers_count)) AS avg_subscribers_count
 FROM youtube.youtube_trending_latest_video_with_rank
-WHERE rank <= 10
+WHERE rank <= 10 AND execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_weekly_top_1_channels_subscribers_count (weekday, max_subscribers_count, min_subscribers_count, avg_subscribers_count)
@@ -182,7 +184,7 @@ SELECT
     MIN(subscribers_count) AS min_subscribers_count,
     ROUND(AVG(subscribers_count)) AS avg_subscribers_count
 FROM youtube.youtube_trending_latest_video_with_rank
-WHERE rank = 1
+WHERE rank = 1 AND execution_ts BETWEEN '2024-11-01' AND '2024-11-28'
 GROUP BY TO_CHAR(execution_ts, 'Day');
 
 INSERT INTO youtube.youtube_trending_latest_top_1_video_views_count (video_link, max_views_count, min_views_count, avg_views_count)
