@@ -1,41 +1,41 @@
 -- soop_hourly_viewers_count(soop 시간대별 시청자 수) 데이터 삽입
 INSERT INTO soop.soop_hourly_viewers_count (ts, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
-    DATE_TRUNC('hour', execution_ts) AS ts,
+    DATE_TRUNC('hour', execution_ts::timestamp) AS ts,
     MAX(viewers_count) AS max_viewers_count,
     ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
     SUM(viewers_count) AS total_viewers_count
 FROM raw.soop_popular_lives
-GROUP BY DATE_TRUNC('hour', execution_ts);
+GROUP BY DATE_TRUNC('hour', execution_ts::timestamp);
 
 -- soop_daily_viewers_count(soop 일별 시청자 수) 데이터 삽입
 INSERT INTO soop.soop_daily_viewers_count (date, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
-    DATE(execution_ts) AS date,
+    DATE(execution_ts::timestamp) AS date,
     MAX(viewers_count) AS max_viewers_count,
     ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
     SUM(viewers_count) AS total_viewers_count
 FROM raw.soop_popular_lives
-GROUP BY DATE(execution_ts);
+GROUP BY DATE(execution_ts::timestamp);
 
 -- soop_weekly_viewers_count(soop 요일별 시청자 수) 데이터 삽입
 INSERT INTO soop.soop_weekly_viewers_count (weekday, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
-    TO_CHAR(execution_ts, 'Day') AS weekday,
+    TO_CHAR(execution_ts::timestamp, 'Day') AS weekday,
     MAX(viewers_count) AS max_viewers_count,
     ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
     SUM(viewers_count) AS total_viewers_count
 FROM raw.soop_popular_lives
-WHERE execution_ts BETWEEN '2024-11-06' AND '2024-12-03'
-GROUP BY TO_CHAR(execution_ts, 'Day');
+WHERE execution_ts::timestamp BETWEEN '2024-11-06' AND '2024-12-03'
+GROUP BY TO_CHAR(execution_ts::timestamp, 'Day');
 
 -- soop_top_10_live_hourly_viewers_count(soop 시간대별 탑10 라이브 시청자 수) 데이터 삽입
 INSERT INTO soop.soop_top_10_live_hourly_viewers_count (live_id, ts, rank, viewers_count, is_adult)
 WITH ranked_lives AS (
     SELECT 
         live_id, 
-        DATE_TRUNC('hour', execution_ts) AS ts,
-        ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('hour', execution_ts) ORDER BY viewers_count DESC) AS rank,
+        DATE_TRUNC('hour', execution_ts::timestamp) AS ts,
+        ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('hour', execution_ts::timestamp) ORDER BY viewers_count DESC) AS rank,
         viewers_count,
         is_adult
     FROM raw.soop_popular_lives
@@ -48,13 +48,13 @@ WHERE rank <= 10;
 INSERT INTO soop.soop_hourly_peak_channel (ts, channel_id, channel_name, peak_viewers_count)
 WITH ranked_channels AS (
     SELECT 
-        DATE_TRUNC('hour', execution_ts) AS ts,
+        DATE_TRUNC('hour', execution_ts::timestamp) AS ts,
         channel_id,
         channel_name,
         MAX(viewers_count) AS peak_viewers_count,
-        RANK() OVER (PARTITION BY DATE_TRUNC('hour', execution_ts) ORDER BY MAX(viewers_count) DESC) AS rank
+        RANK() OVER (PARTITION BY DATE_TRUNC('hour', execution_ts::timestamp) ORDER BY MAX(viewers_count) DESC) AS rank
     FROM raw.soop_popular_lives
-    GROUP BY DATE_TRUNC('hour', execution_ts), channel_id, channel_name
+    GROUP BY DATE_TRUNC('hour', execution_ts::timestamp), channel_id, channel_name
 )
 SELECT ts, channel_id, channel_name, peak_viewers_count
 FROM ranked_channels
@@ -64,13 +64,13 @@ WHERE rank = 1;
 INSERT INTO soop.soop_daily_peak_channel (date, channel_id, channel_name, peak_viewers_count)
 WITH ranked_channels AS (
     SELECT 
-        DATE_TRUNC('day', execution_ts) AS date,
+        DATE_TRUNC('day', execution_ts::timestamp) AS date,
         channel_id,
         channel_name,
         MAX(viewers_count) AS peak_viewers_count,
-        RANK() OVER (PARTITION BY DATE_TRUNC('day', execution_ts) ORDER BY MAX(viewers_count) DESC) AS rank
+        RANK() OVER (PARTITION BY DATE_TRUNC('day', execution_ts::timestamp) ORDER BY MAX(viewers_count) DESC) AS rank
     FROM raw.soop_popular_lives
-    GROUP BY DATE_TRUNC('day', execution_ts), channel_id, channel_name
+    GROUP BY DATE_TRUNC('day', execution_ts::timestamp), channel_id, channel_name
 )
 SELECT date, channel_id, channel_name, peak_viewers_count
 FROM ranked_channels
@@ -82,7 +82,7 @@ SELECT DISTINCT
     l.channel_id,
     l.live_id,
     l.channel_name,
-    l.execution_ts AS peak_ts,
+    l.execution_ts::timestamp AS peak_ts,
     l.viewers_count AS peak_viewers_count,
     l.live_title,
     l.category,
@@ -109,20 +109,20 @@ GROUP BY channel_id, live_id, channel_name;
 INSERT INTO soop.soop_category_hourly_viewers_count (category_id, ts, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
     category,
-    DATE_TRUNC('hour', execution_ts) AS ts,
+    DATE_TRUNC('hour', execution_ts::timestamp) AS ts,
     MAX(viewers_count) AS max_viewers_count,
     ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
     SUM(viewers_count) AS total_viewers_count
 FROM raw.soop_popular_lives
-GROUP BY category, DATE_TRUNC('hour', execution_ts);
+GROUP BY category, DATE_TRUNC('hour', execution_ts::timestamp);
 
 -- soop_category_daily_viewers_count(soop 카테고리별 각 일자의 시청자 수) 데이터 삽입
 INSERT INTO soop.soop_category_daily_viewers_count (category_id, date, max_viewers_count, avg_viewers_count, total_viewers_count)
 SELECT 
     category,
-    DATE(execution_ts) AS date,
+    DATE(execution_ts::timestamp) AS date,
     MAX(viewers_count) AS max_viewers_count,
     ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
     SUM(viewers_count) AS total_viewers_count
 FROM raw.soop_popular_lives
-GROUP BY category, DATE(execution_ts);
+GROUP BY category, DATE(execution_ts::timestamp);
