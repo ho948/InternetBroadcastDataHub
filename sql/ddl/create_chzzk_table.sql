@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS chzzk.chzzk_top_10_live_hourly_viewers_count (
 CREATE TABLE IF NOT EXISTS chzzk.chzzk_hourly_peak_channel (
     id SERIAL,
     ts TIMESTAMP NOT NULL,
+    channel_id VARCHAR(255),
     channel_name VARCHAR(255),
     peak_viewers_count INT,
     PRIMARY KEY (id, ts)
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS chzzk.chzzk_hourly_peak_channel (
 CREATE TABLE IF NOT EXISTS chzzk.chzzk_daily_peak_channel (
     id SERIAL,
     date DATE NOT NULL,
+    channel_id VARCHAR(255),
     channel_name VARCHAR(255),
     peak_viewers_count INT,
     PRIMARY KEY (id, date)
