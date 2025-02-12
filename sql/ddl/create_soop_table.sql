@@ -1,110 +1,52 @@
--- 모든 테이블 삭제
-DROP TABLE IF EXISTS soop.soop_hourly_viewers_count;
-DROP TABLE IF EXISTS soop.soop_daily_viewers_count;
-DROP TABLE IF EXISTS soop.soop_weekly_viewers_count;
-DROP TABLE IF EXISTS soop.soop_top_10_live_hourly_viewers_count;
-DROP TABLE IF EXISTS soop.soop_hourly_peak_channel;
-DROP TABLE IF EXISTS soop.soop_daily_peak_channel;
-DROP TABLE IF EXISTS soop.soop_channel_peak_live;
-DROP TABLE IF EXISTS soop.soop_channel_viewers_count;
-DROP TABLE IF EXISTS soop.soop_category_hourly_viewers_count;
-DROP TABLE IF EXISTS soop.soop_category_daily_viewers_count;
+DROP TABLE IF EXISTS soop.popular_live_with_rank;
+DROP TABLE IF EXISTS soop.weekly_viewers_count;
+DROP TABLE IF EXISTS soop.channel_name_latest;
+DROP TABLE IF EXISTS soop.peak_channel;
+DROP TABLE IF EXISTS soop.channel_live_viewers_count;
+DROP TABLE IF EXISTS soop.channel_peak_live;
 
--- 테이블 생성
-CREATE TABLE IF NOT EXISTS soop.soop_hourly_viewers_count (
-    id SERIAL,
-    ts TIMESTAMP NOT NULL,
-    max_viewers_count INT,
-    avg_viewers_count INT,
-    total_viewers_count INT,
-    PRIMARY KEY (id, ts)
+
+CREATE TABLE IF NOT EXISTS soop.popular_live_with_rank (
+    execution_ts TIMESTAMP NOT NULL,
+    live_id VARCHAR(255) NOT NULL,
+    live_title VARCHAR(255),
+    viewers_count INT,
+    channel_id VARCHAR(255) NOT NULL,
+    channel_name VARCHAR(255),
+    category VARCHAR(255),
+    is_adult BOOLEAN,
+    rank INT
 );
-
-CREATE TABLE IF NOT EXISTS soop.soop_daily_viewers_count (
-    id SERIAL,
-    date DATE NOT NULL,
-    max_viewers_count INT,
-    avg_viewers_count INT,
-    total_viewers_count INT,
-    PRIMARY KEY (id, date)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_weekly_viewers_count (
-    id SERIAL,
+CREATE TABLE IF NOT EXISTS soop.weekly_viewers_count (
     weekday VARCHAR(20) NOT NULL,
     max_viewers_count INT,
     avg_viewers_count INT,
-    total_viewers_count INT,
-    PRIMARY KEY (id, weekday)
+    total_viewers_count INT
 );
-
-CREATE TABLE IF NOT EXISTS soop.soop_top_10_live_hourly_viewers_count (
-    id SERIAL,
-    live_id VARCHAR(255) NOT NULL,
-    ts TIMESTAMP NOT NULL,
-    rank INT,
+CREATE TABLE IF NOT EXISTS soop.channel_name_latest (
+    channel_id VARCHAR(255) PRIMARY KEY,
+    channel_name VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS soop.peak_channel (
+    date DATE,
+    channel_name VARCHAR(255),
+    peak_time VARCHAR(10),
+    peak_viewers_count INT
+);
+CREATE TABLE IF NOT EXISTS soop.channel_live_viewers_count (
+    channel_name VARCHAR(255),
+    live_id VARCHAR(255),
     viewers_count INT,
-    is_adult BOOLEAN,
-    PRIMARY KEY (id, live_id, ts)
+    execution_ts TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS soop.soop_hourly_peak_channel (
-    id SERIAL,
-    ts TIMESTAMP NOT NULL,
-    channel_id VARCHAR(255),
+CREATE TABLE IF NOT EXISTS soop.channel_peak_live (
     channel_name VARCHAR(255),
+    live_id VARCHAR(255),
     peak_viewers_count INT,
-    PRIMARY KEY (id, ts)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_daily_peak_channel (
-    id SERIAL,
-    date DATE NOT NULL,
-    channel_id VARCHAR(255),
-    channel_name VARCHAR(255),
-    peak_viewers_count INT,
-    PRIMARY KEY (id, date)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_channel_peak_live (
-    id SERIAL,
-    channel_id VARCHAR(255) NOT NULL,
-    live_id VARCHAR(255) NOT NULL,
-    channel_name VARCHAR(255),
-    peak_ts TIMESTAMP,
-    peak_viewers_count INT,
-    live_title VARCHAR(255),
-    category_id VARCHAR(255),
-    is_adult BOOLEAN,
-    PRIMARY KEY (id, channel_id, live_id)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_channel_viewers_count (
-    id SERIAL,
-    channel_id VARCHAR(255) NOT NULL,
-    live_id VARCHAR(255) NOT NULL,
-    channel_name VARCHAR(255),
-    max_viewers_count INT,
-    avg_viewers_count INT,
-    PRIMARY KEY (id, channel_id, live_id)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_category_hourly_viewers_count (
-    id SERIAL,
-    category_id VARCHAR(255) NOT NULL,
-    ts TIMESTAMP NOT NULL,
-    max_viewers_count INT,
-    avg_viewers_count INT,
-    total_viewers_count INT,
-    PRIMARY KEY (id, category_id, ts)
-);
-
-CREATE TABLE IF NOT EXISTS soop.soop_category_daily_viewers_count (
-    id SERIAL,
-    category_id VARCHAR(255) NOT NULL,
-    date TIMESTAMP NOT NULL,
-    max_viewers_count INT,
-    avg_viewers_count INT,
-    total_viewers_count INT,
-    PRIMARY KEY (id, category_id, date)
+    peak_live_title VARCHAR(255),
+    peak_category VARCHAR(255),
+    peak_is_adult BOOLEAN,
+    peak_ts TIMESTAMP
 );
