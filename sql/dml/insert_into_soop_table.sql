@@ -12,6 +12,16 @@ INSERT INTO soop.popular_live_with_rank
         ROW_NUMBER() OVER (PARTITION BY DATE_TRUNC('hour', execution_ts::timestamp) ORDER BY viewers_count DESC) AS rank
     FROM raw.soop_popular_lives;
 
+INSERT INTO soop.weekly_viewers_count (weekday, max_viewers_count, avg_viewers_count, total_viewers_count)
+SELECT 
+    TO_CHAR(execution_ts::timestamp, 'Day') AS weekday,
+    MAX(viewers_count) AS max_viewers_count,
+    ROUND(AVG(viewers_count), 1) AS avg_viewers_count,
+    SUM(viewers_count) AS total_viewers_count
+FROM raw.soop_popular_lives
+WHERE execution_ts::timestamp BETWEEN '2024-11-06' AND '2024-12-03'
+GROUP BY TO_CHAR(execution_ts::timestamp, 'Day');
+
 INSERT INTO soop.channel_name_latest (channel_id, channel_name, created_at, updated_at)
     SELECT 
         c.channel_id, 
