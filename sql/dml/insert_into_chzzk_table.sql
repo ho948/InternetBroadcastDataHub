@@ -71,7 +71,6 @@ INSERT INTO chzzk.channel_live_viewers_count (channel_name, live_id, viewers_cou
     JOIN chzzk.channel_name_latest c ON l.channel_id = c.channel_id
     ORDER BY execution_ts;
 
-DROP TABLE IF EXISTS chzzk.channel_peak_live;
 CREATE TABLE IF NOT EXISTS chzzk.channel_peak_live (
     channel_name VARCHAR(255),
     live_id VARCHAR(255),
