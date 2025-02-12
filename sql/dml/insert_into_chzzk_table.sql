@@ -71,16 +71,6 @@ INSERT INTO chzzk.channel_live_viewers_count (channel_name, live_id, viewers_cou
     JOIN chzzk.channel_name_latest c ON l.channel_id = c.channel_id
     ORDER BY execution_ts;
 
-CREATE TABLE IF NOT EXISTS chzzk.channel_peak_live (
-    channel_name VARCHAR(255),
-    live_id VARCHAR(255),
-    peak_viewers_count INT,
-    peak_live_title VARCHAR(255),
-    peak_category_id VARCHAR(255),
-    peak_is_adult BOOLEAN,
-    peak_ts TIMESTAMP
-);
-
 INSERT INTO chzzk.channel_peak_live 
     (channel_name, live_id, peak_viewers_count, peak_live_title, peak_category_id, peak_is_adult, peak_ts)
   SELECT 
