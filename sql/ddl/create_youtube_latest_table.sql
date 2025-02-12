@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS youtube.latest_video_with_rank;
 DROP TABLE IF EXISTS youtube.latest_weekly_views_count;
 DROP TABLE IF EXISTS youtube.latest_channel_name_latest;
-DROP TABLE IF EXISTS youtube.latest_channel_video_views_count;
+DROP TABLE IF EXISTS youtube.latest_channel_video;
 DROP TABLE IF EXISTS youtube.latest_channel_live_time_to_trending;
 
 
